@@ -149,8 +149,9 @@ router.extend(file_store_router)
 router.extend(tool_manager_router)
 router.extend(user_files_router)
 
-# Wire up our DRF APIs using automatic URL routing.
 urlpatterns += patterns(
-    '', url(r"^api/v2/", include(router.urls)),
+    '',
+    # Wire up our DRF APIs using automatic URL routing
+    url(r"^api/v2/", include(router.urls)),
     django_docker_engine_url
 )
