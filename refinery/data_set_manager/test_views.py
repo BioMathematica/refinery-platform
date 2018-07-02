@@ -2,11 +2,58 @@ import json
 import re
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 
+from rest_framework import status
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.views import NodeViewSet
 from .models import Assay, Investigation, Node, Study
+
+
+class NodeAPIv2UnauthenticatedAccessTest(APITestCase):
+
+    def setUp(self):
+        investigation = Investigation.objects.create()
+        study = Study.objects.create(investigation=investigation)
+        self.node = Node.objects.create(study=study)
+        self.factory = APIRequestFactory()
+
+    def test_get_node_list(self):
+        view = NodeViewSet.as_view({'get': 'list'})
+        request = self.factory.get(reverse('node-list'))
+        response = view(request)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_node_detail(self):
+        view = NodeViewSet.as_view({'get': 'retrieve'})
+        url = reverse('node-detail', kwargs={'uuid': self.node.uuid})
+        request = self.factory.get(url)
+        response = view(request, uuid=self.node.uuid)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_post_node(self):
+        view = NodeViewSet.as_view({'post': 'create'})
+        request = self.factory.post(reverse('node-list'))
+        response = view(request)
+        self.assertEqual(response.status_code,
+                         status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_put_node(self):
+        view = NodeViewSet.as_view({'put': 'update'})
+        url = reverse('node-detail', kwargs={'uuid': self.node.uuid})
+        request = self.factory.put(url)
+        response = view(request)
+        self.assertEqual(response.status_code,
+                         status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_patch_node(self):
+        view = NodeViewSet.as_view({'patch': 'partial_update'})
+        url = reverse('node-detail', kwargs={'uuid': self.node.uuid})
+        request = self.factory.patch(url)
+        response = view(request)
+        self.assertEqual(response.status_code,
+                         status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class NodeApiV2Tests(APITestCase):
@@ -44,35 +91,6 @@ class NodeApiV2Tests(APITestCase):
         self.url_root = '/api/v2/node/'
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(self.url_root, data=self.node_json,
-                                            format='json')
-        self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(self.url_root,
-                                                data=self.node_json,
-                                                format='json')
-        self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(self.url_root,
-                                                    data=self.node_json,
-                                                    format='json')
-        self.options_response = self.view(self.options_request)
-
-    def test_get_request(self):
-        self.assertIsNotNone(self.get_response.data[0])
-
-    def test_get_request_anonymous_user(self):
-        self.client.logout()
-        self.new_get_request = self.factory.get(self.url_root)
-        self.new_get_response = self.view(self.new_get_request)
-        self.assertIsNotNone(self.new_get_response.data[0])
-        self.assertEqual(self.new_get_request.user.id, None)
-
-    def test_unallowed_http_verbs(self):
-        self.assertEqual(self.put_response.data['detail'],
-                         'Method "PUT" not allowed.')
-        self.assertEqual(self.patch_response.data['detail'],
-                         'Method "PATCH" not allowed.')
-        self.assertEqual(self.options_response.data['detail'],
-                         'Method "OPTIONS" not allowed.')
 
     def test_get_children(self):
         self.assertIsNotNone(self.get_response.data)
