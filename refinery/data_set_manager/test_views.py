@@ -76,17 +76,15 @@ class NodeAPIv2GetDetailTest(APITestCase):
         self.assertEqual(self.response.data['auxiliary_nodes'], [])
 
     def test_get_aux_node_task_states(self):
-        self.assertEqual(
-            self.response.data['auxiliary_file_generation_task_state'], None
+        self.assertIsNone(
+            self.response.data['auxiliary_file_generation_task_state']
         )
 
     def test_get_file_extension(self):
-        self.assertEqual(self.response.data['file_extension'], None)
+        self.assertIsNone(self.response.data['file_extension'])
 
     def test_get_relative_file_store_item_url(self):
-        self.assertEqual(
-            self.response.data['relative_file_store_item_url'], None
-        )
+        self.assertIsNone(self.response.data['relative_file_store_item_url'])
 
     def test_get_uuid(self):
         self.assertEqual(self.response.data['uuid'], self.node.uuid)
