@@ -30,9 +30,9 @@ from registration import signals
 from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
-from rest_framework import authentication, status, viewsets
+from rest_framework import (authentication, mixins, permissions, status,
+                            viewsets)
 from rest_framework.decorators import detail_route
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -693,13 +693,12 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class NodeViewSet(viewsets.ModelViewSet):
+class NodeViewSet(mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet):
     """API endpoint that allows Nodes to be viewed"""
     queryset = Node.objects.all()
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
-    http_method_names = ['get']
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -1055,7 +1054,7 @@ class OpenIDToken(APIView):
     * Cognito identity pool with Refinery configured as a custom auth provider
     """
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
     renderer_classes = (JSONRenderer,)
 
     def post(self, request):
